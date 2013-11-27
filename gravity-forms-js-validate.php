@@ -78,7 +78,7 @@ class GFValidate {
 				"$(e).find('input, select, textarea').addClass('required');".
 			"});".
 			"$('form').validate({".
-				"debug: true,".
+				"debug: false,".
 				"errorElement: 'div',".
 				"errorClass: 'gfield_error',".
 				"errorPlacement: function(error, element){".
@@ -96,39 +96,12 @@ class GFValidate {
 				"unhighlight: function(element, errorClass, validClass) {".
 					"$(element).closest('.gfield').removeClass(errorClass).addClass(validClass);".
 				"},".
-				/*
-				"success: function(element) {".
-					"console.log(element.parent());".
-					"container = element.parent();".
-					"var errors = container.find('.gf_validate_error').length;".
-					// Remove element if no other requried fields
-					"if( errors == 0 ){".
-						"element.remove();".
-						"container.removeClass('gfield_error').addClass('shitsticks');".
-					"} else {".
-						"element.addClass('valid').text('This field required.')".
-					"}".
-				"}".
-				*/
+				"invalidHandler: function(event, validator) {".
+					"gf_submitting_". $form['id'] . " = false;".
+				"}".				
 			"});".
 	    "})(jQuery);";
-	/*    
-	    $script .= "var getGroups = (function(){".
-			"var result = {};".
-			"jQuery('div.ginput_complex').each(function(i,e) {".
-				"var fieldName = e.id;".
-				"jQuery(this).find('input, select, textarea').each(function(i,e) {".
-					"if(result[fieldName] != undefined){".
-						"result[fieldName] += ' '+e.name;".
-					"} else {".
-						"result[fieldName] = e.name".
-					"}".
-				"});".
-			"});".
-			//"console.log(result);".
-			"return result;".
-	    "});";
-	*/  
+  
 	    GFFormDisplay::add_init_script($form['id'], 'gf_js_validate', GFFormDisplay::ON_PAGE_RENDER, $script);
 		return $form;
 	}	
@@ -252,49 +225,3 @@ if(!function_exists("rgblank")){
 	}
 }
 
-/*
-<script>
-	jQuery(document).ready(function($){
-		var container;
-		
-		// Find required elements and add class
-		$('.gfield_contains_required').each(function(i, e){
-			$(e).find('input').addClass('required');
-		});
-		$('form').validate({
-			errorElement: 'div',
-			errorClass: 'gf_validate_error',
-			errorPlacement: function(error, element){
-				container = element.closest('.gfield');
-				// Only set container level error once
-				if( ! container.hasClass('gfield_error') ){
-					error.appendTo(container);
-					container.addClass('gfield_error');					
-				} 
-			},
-			success: function(element) {
-				console.log(element.parent());
-				container = element.parent();
-				var errors = container.find('.gf_validate_error').length;
-
-				// Remove element if no other requried fields
-				if( errors == 0 ){
-					element.remove();
-					container.removeClass('gfield_error').addClass('shitsticks');
-				} else {
-					element.addClass("valid").text("This field required.")
-				}
-			},
-		});
-	});
-</script>
-<style>
-	div.gf_validate_error{
-		color: #790000;
-		font-weight: bold;
-		letter-spacing: normal;
-		margin-left: 31%;
-		width: 63%;
-	}
-</style>
-*/
