@@ -40,10 +40,10 @@ class GFValidate {
 		// Load Sisyphus JS when necessary
 		add_action('gform_enqueue_scripts', array('GFValidate', 'gform_enqueue_scripts' ), '', 2 );
 	}
-	
-	public static function gform_enqueue_scripts( $form = null ) 
+
+	public static function gform_enqueue_scripts( $form = null )
 	{
-		if ( ! $form == null ) 
+		if ( ! $form == null )
 		{
 			// Check form for enabled validation
 			if( array_key_exists('enable_validation', $form) && $form['enable_validation'] == 1 )
@@ -66,63 +66,83 @@ class GFValidate {
 			}
 		}
 	}
-	
+
+
 	public static function add_page_script($form)
 	{
-		self::log_debug('Adding page script to '.$form['id']);
-	
-		$script = "(function($){" .
-			"var container;".
-			// Find required elements and add class
-			"$('.gfield_contains_required').each(function(i, e){".
-				"$(e).find('input, select, textarea').addClass('required');".
-			"});".
-			"$('form').validate({".
-				"debug: false,".
-				"errorElement: 'div',".
-				"errorClass: 'gfield_error',".
-				"errorPlacement: function(error, element){".
-					"container = element.closest('.gfield');".
-					// Only set container level error once
-					//"if( ! container.hasClass('gf_js_error') ){".
-						"error.appendTo(container);".
-						//"container.addClass('gf_js_error');".
-					//"}".
-				"},".
-				"groups: getGroups(),".
-				"highlight: function(element, errorClass, validClass) {".
-					"$(element).closest('.gfield').addClass(errorClass).removeClass(validClass);".
-				"},".
-				"unhighlight: function(element, errorClass, validClass) {".
-					"$(element).closest('.gfield').removeClass(errorClass).addClass(validClass);".
-				"},".
-				"invalidHandler: function(event, validator) {".
-					"gf_submitting_". $form['id'] . " = false;".
-				"}".				
-			"});".
+	    self::log_debug('Adding page script to '.$form['id']);
+
+	    $script = "(function($){" .
+	        "var container;".
+	        // Find required elements and add class
+	        "$('.gfield_contains_required').each(function(i, e){".
+	            "$(e).find('input, select, textarea').attr('required', true);".
+	        "});".
+	        "$('#gform_".$form['id']."').validate({".
+	            "debug: true,".
+	            "errorElement: 'div',".
+	            "errorClass: 'gfield_error',".
+	            "errorPlacement: function(error, element){".
+	                "container = element.closest('.gfield');".
+	                // Only set container level error once
+	                //"if( ! container.hasClass('gf_js_error') ){".
+	                   // "error.appendTo(container);".
+	                    //"container.addClass('gf_js_error');".
+	                //"}".
+	            "},";
+
+            // Get messages for each input
+            $script .= "messages: {";
+            foreach ($form['fields'] as $field) {
+				$field_name = 'input_' . $field['id']; // test
+				$field_errorMessage = "'" . $field['errorMessage'] . "',";
+				if ($field['errorMessage'] !== '')  {
+				    $script2 = $script2 .
+				    $field_name . ": " . $field_errorMessage;
+				}
+            }
+            $script .= "},";
+
+            $script .
+	            "groups: getGroups(),".
+	            "focusCleanup: true,".
+	            // I removed the ugly highlighting that
+	            "highlight: function(element, errorClass, validClass) {".
+	                "$(element).closest('.gfield').addClass(errorClass).removeClass(validClass);".
+	            "},".
+	            "unhighlight: function(element, errorClass, validClass) {".
+	                "$(element).closest('.gfield').removeClass(errorClass).addClass(validClass);".
+	            "},".
+	            "invalidHandler: function(event, validator) {".
+	                "gf_submitting_".$form['id']." = false;".
+	            "}".
+	        "});".
 	    "})(jQuery);";
-  
+
+		self::log_debug('Script is: '.$script);
+
 	    GFFormDisplay::add_init_script($form['id'], 'gf_js_validate', GFFormDisplay::ON_PAGE_RENDER, $script);
-		return $form;
-	}	
+	    return $form;
+	}
+
 	public static function add_form_setting( $settings, $form )
 	{
 		$current = rgar($form, 'enable_validation');
 		$checked = !empty($current) ? 'checked="checked"' : '';
-		
+
 	    $settings['Form Options']['enable_validation'] = '
 	        <tr>
 	        	<th>Javascript Validation <a href="#" onclick="return false;" class="tooltip tooltip_form_animation" tooltip="&lt;h6&gt;Enable Client-side Validation&lt;/h6&gt;Check this option to enable validation messages for the client before reloading the page."></a></th>
 	            <td><input type="checkbox" value="1" '.$checked.' name="enable_validation"> <label for="enable_validation">'.__('Validate forms before submission', 'gravity-forms-js-validate').'</label></td>
 	        </tr>';
 
-	    return $settings;		
+	    return $settings;
 	}
-	
+
 	public static function save_form_setting($form)
 	{
 	    $form['enable_validation'] = rgpost('enable_validation');
-	    return $form;	
+	    return $form;
 	}
 
 	public static function plugin_row()
@@ -143,7 +163,7 @@ class GFValidate {
 		}
 		echo '</tr><tr class="plugin-update-tr"><td colspan="5" class="plugin-update"><div class="update-message" ' . $style . '>' . $message . '</div></td>';
 	}
-    
+
 	private static function is_gravityforms_installed(){
 		return class_exists("RGForms");
 	}
