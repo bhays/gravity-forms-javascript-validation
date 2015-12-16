@@ -97,13 +97,13 @@ class GFValidate {
 				$field_name = 'input_' . $field['id']; // test
 				$field_errorMessage = "'" . $field['errorMessage'] . "',";
 				if ($field['errorMessage'] !== '')  {
-				    $script2 = $script2 .
+				    $script = $script .
 				    $field_name . ": " . $field_errorMessage;
 				}
             }
             $script .= "},";
 
-            $script .
+            $script .=
 	            "groups: getGroups(),".
 	            "focusCleanup: true,".
 	            // I removed the ugly highlighting that
